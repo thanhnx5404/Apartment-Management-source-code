@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <!-- Basic -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Mobile Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <!-- Site Metas -->
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+
+  <title>Home</title>
+
+  <!-- slider stylesheet -->
+  <link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+  <!-- bootstrap core css -->
+  <link rel="stylesheet" type="text/css" href="stylesheets/bootstrap.css" />
+  <!-- font awesome style -->
+  <link rel="stylesheet" type="text/css" href="stylesheets/font-awesome.min.css" />
+
+  <!-- Custom styles for this template -->
+  <link href="stylesheets/style.css" rel="stylesheet" />
+  <!-- responsive style -->
+  <link href="stylesheets/responsive.css" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid #ccc;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .btn-edit {
+      background-color: #007bff;
+    }
+
+    .form-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 1px solid #ccc;
+      background-color: white;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-popup .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-popup .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .form-popup .form-group input,
+    .form-popup .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('../../partials/header') %>
+  <div class="container">
+    <h2 class="text-center">Quản lý Phí Cơ Sở</h2>
+    <%- include('../../partials/flash') %>
+
+    <!-- Button to Add New Fee -->
+    <button class="btn btn-primary" onclick="openAddPopup()">Thêm Phí Cơ Sở</button>
+
+    <!-- Table displaying the fee data -->
+    <table class="table table-bordered mt-3">
+      <thead>
+        <tr>
+          <th>Mã Phí</th>
+          <th>Loại Phí</th>
+          <th>Giá Cơ Sở</th>
+          <th>Mô Tả</th>
+          <th>Hành Động</th>
+        </tr>
+      </thead>
+      <tbody id="feeTableBody">
+        <% base_bills.forEach((base_bill, index) => { %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= base_bill.loai_phi %></td>
+          <td><%= base_bill.gia_co_so %></td>
+          <td><%= base_bill.mo_ta %></td>
+          <td>
+            <!-- Edit and Delete buttons for each fee item -->
+            <button class="btn btn-edit"
+              onclick='openEditPopup("<%= base_bill.id_phi_co_so %>", "<%= base_bill.loai_phi %>", "<%= base_bill.gia_co_so %>", "<%= base_bill.mo_ta %>")'>Edit</button>
+            <form action="/base_bills/<%= base_bill.id_phi_co_so %>?_method=DELETE" method="POST"
+              style="display: inline;">
+              <button class="btn btn-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Form Popup -->
+  <div class="form-popup" id="feeFormPopup">
+    <h3 id="formTitle">Thêm Phí Cơ Sở</h3>
+
+    <form id="feeForm" action="" method="POST">
+      <div class="form-group">
+        <label for="feeType">Loại Phí</label>
+        <input type="text" id="feeType" class="form-control" name="base_bill[loai_phi]" required>
+      </div>
+
+      <div class="form-group">
+        <label for="basePrice">Giá Cơ Sở</label>
+        <input type="number" id="basePrice" class="form-control" step="0.01" name="base_bill[gia_co_so]" required>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Mô Tả</label>
+        <textarea id="description" class="form-control" name="base_bill[mo_ta]"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-success">Lưu</button>
+      <button type="button" class="btn btn-danger" onclick="closePopup()">Đóng</button>
+    </form>
+  </div>
+
+  <!-- Overlay for Popup -->
+  <div class="overlay" id="overlay"></div>
+  <%- include('../../partials/footer_infosection') %>
+
+  <!-- Add custom script -->
+  <script>
+    // JavaScript to open and close the popup form
+    function openAddPopup() {
+      document.getElementById('feeType').value = "";
+      document.getElementById('basePrice').value = "";
+      document.getElementById('description').value = "";
+      document.getElementById('feeForm').action = '/base_bills';
+      document.getElementById('feeFormPopup').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+    }
+    function closePopup() {
+      document.getElementById('feeFormPopup').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+    function openEditPopup(id, loai_phi, gia_co_so, mo_ta) {
+      console.log(id)
+      document.getElementById('formTitle').innerText = 'Sửa Phí Cơ Sở';
+      document.getElementById('feeType').value = loai_phi;
+      document.getElementById('basePrice').value = gia_co_so;
+      document.getElementById('description').value = mo_ta;
+      document.getElementById('feeForm').action = `/base_bills/${id}?_method=PUT`;
+      document.getElementById('feeFormPopup').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+    }
+  </script>
+</body>
+
+</html>
